@@ -1,0 +1,13 @@
+C:\Users\quiqu\AppData\Local\Temporary Projects\ImpresoraBraille\bin\Debug\ImpresoraBraille.exe.config
+C:\Users\quiqu\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\bin\Debug\ImpresoraBraille.exe.config
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\bin\Debug\ImpresoraBraille.exe.config
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\bin\Debug\ImpresoraBraille.exe
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\bin\Debug\ImpresoraBraille.pdb
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\bin\Debug\ImpresoraBraille.xml
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\obj\Debug\ImpresoraBraille.vbprojResolveAssemblyReference.cache
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\obj\Debug\ImpresoraBraille.Form1.resources
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\obj\Debug\ImpresoraBraille.Resources.resources
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\obj\Debug\ImpresoraBraille.vbproj.GenerateResource.Cache
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\obj\Debug\ImpresoraBraille.exe
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\obj\Debug\ImpresoraBraille.xml
+D:\Dropbox\DOCUMENTOS\ONIET 2017\Software\ImpresoraBraille\ImpresoraBraille\obj\Debug\ImpresoraBraille.pdb
