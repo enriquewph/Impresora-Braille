@@ -1,0 +1,17 @@
+[
+  {
+    "Sourcefile": "",
+    "Include": "",
+    "Includepath": "C:\\Users\\quiqu\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\1.0.2\\cores\\esp32"
+  },
+  {
+    "Sourcefile": "",
+    "Include": "",
+    "Includepath": "C:\\Users\\quiqu\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\1.0.2\\variants\\esp32"
+  },
+  {
+    "Sourcefile": "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\Desarrollo\\Software\\ard_builds\\sketch\\esp_impresora.ino.cpp",
+    "Include": "",
+    "Includepath": ""
+  }
+]
