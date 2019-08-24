@@ -21,7 +21,7 @@ const int stepsPerRevolution = 48;  // change this to fit the number of steps pe
 // for your motor
 
 // initialize the stepper library on pins 8 through 11:
-Stepper myStepper(stepsPerRevolution, 8, 9, 10, 11);
+Stepper myStepper(stepsPerRevolution, 8, 9, 10 , 11);
 
 bool estadoAnterior = 0;
 bool continuo = 0;
@@ -44,7 +44,7 @@ void serialEvent() {
       myStepper.step(-stepsPerRevolution * 5);
       break;
     case 'S':
-      andando = !andando;
+      myStepper.step(stepsPerRevolution * 5);
       break;
 
     case 'C':
@@ -77,6 +77,7 @@ void serialEvent() {
 
 void loop()
 {
+  /*
   bool estadoActual = digitalRead(A0);
   if (estadoAnterior != estadoActual)
   {
@@ -113,4 +114,6 @@ void loop()
     digitalWrite(10, LOW);
     digitalWrite(11, LOW);
   }
+ */
+  
 }
