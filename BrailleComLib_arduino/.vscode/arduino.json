@@ -2,7 +2,7 @@
     "sketch": "BrailleComLib_arduino.ino",
     "board": "arduino:avr:mega",
     "configuration": "cpu=atmega2560",
-    "port": "COM5",
+    "port": "COM19",
     "output": "../ard_builds",
     "programmer": "AVRISP mkII"
 }

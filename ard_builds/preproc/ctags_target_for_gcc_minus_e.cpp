@@ -1,13 +1,15 @@
-#include <stdint.h>
+# 1 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+# 1 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+
 
 void setup()
 {
     Serial.begin(115200);
     Serial3.begin(115200);
     BrailleComLib_Init();
-    pinMode(0, OUTPUT);
-    digitalWrite(0, HIGH);
-    pinMode(13, OUTPUT);
+    pinMode(0, 0x1);
+    digitalWrite(0, 0x1);
+    pinMode(13, 0x1);
     Serial3.println("INICIADO");
 }
 
@@ -17,8 +19,8 @@ void loop()
 }
 
 //Configuracion:
-#define BCL_RECIBIR_HOJA_TIMEOUT 2000 //[mS] transcurridos desde que no se recibio ningun dato. \
-                                      //al recibir una hoja, para que se destrabe el sistema.
+
+
 
 //Variables del sistema
 uint8_t BCLV_HOJA_ACTUAL = 0; //Se actualiza, desde la pc, con la hoja actual que se esta imprimiendo
@@ -30,25 +32,25 @@ byte contenidoHoja[7][72]; // 7 Bytes, 72 renglones -> 56x72 puntos -> 28 x 24 c
 
 //Estados de la comunicacion, para diferenciar que se recibe ya que al recibir una hoja
 //se pueden dar todas las combinaciones de bytes posibles.
-#define BCL_ESTADO_STANDBY 0         //En estado normal, recibe handshakes, envia y recibe boludeces.
-#define BCL_ESTADO_RECIBIENDO_HOJA 1 //En este estado se recibe y guardan los bytes recibidos a la matriz contenidoHoja
-uint8_t BCL_ESTADO = BCL_ESTADO_STANDBY;
+
+
+uint8_t BCL_ESTADO = 0 /*En estado normal, recibe handshakes, envia y recibe boludeces.*/;
 
 //Comandos a recibir.
-#define BCLS_HANDSHAKE 0xF0
-#define BCLS_PREPARAR_IMPRESION 0xF1 //Se debe mandar al final de toda configuracion, justo antes de recibir datos de hoja.
-#define BCLS_HOJA_NUMERO 0xF2
-#define BCLS_HOJA_ACTUAL 0xF3
+
+
+
+
 
 //Respuestas a enviar.
-#define BCLR_CMD_VALIDO 0xF4   //Se envia si el comando recibido en STANDBY es VALIDO...
-#define BCLR_CMD_INVALIDO 0xF5 //Se envia si el comando recibido en STANDBY es invalido...
+
+
 
 //Respuestas a enviar dadas por eventos.
-#define BCLE_IMPRESION_OK 0xF6    //Se envia si se termino de imprimir una hoja, y se espera mas datos.
-#define BCLE_IMPRESION_ERROR 0xF7 //Se envia si no se pudo imprimir la hoja...
-#define BCLE_RECEPCION_OK 0xF8    //Se envia si se recibio la hoja correctamente.
-#define BCLE_RECEPCION_ERROR 0xF9 //Se envia si hubo un error al recibir una hoja.
+
+
+
+
 
 void BrailleComLib_Init()
 {
@@ -62,7 +64,7 @@ uint32_t BCL_LASTMILLIS_TMOUT;
 void BrailleComLib_Loop()
 {
 
-    if (BCL_ESTADO == BCL_ESTADO_STANDBY)
+    if (BCL_ESTADO == 0 /*En estado normal, recibe handshakes, envia y recibe boludeces.*/)
     {
         uint8_t cmdByte, valByte;
         BCL_STANDBY_CMD_RECIBIDO = 0;
@@ -72,13 +74,13 @@ void BrailleComLib_Loop()
             cmdByte = Serial.read();
             valByte = Serial.read();
 
-            if (cmdByte >= BCLS_HANDSHAKE && cmdByte <= BCLS_HOJA_ACTUAL)
+            if (cmdByte >= 0xF0 && cmdByte <= 0xF3)
             {
                 BCL_STANDBY_CMD_RECIBIDO = 1;
             }
             else
             {
-                Serial.write(BCLR_CMD_INVALIDO);
+                Serial.write(0xF5 /*Se envia si el comando recibido en STANDBY es invalido...*/);
             }
             BCL_LASTMILLIS_TMOUT = millis();
         }
@@ -96,33 +98,33 @@ void BrailleComLib_Loop()
 
         if (BCL_STANDBY_CMD_RECIBIDO)
         {
-            Serial3.print("CMD: " + String(cmdByte, HEX) + " - ");
+            Serial3.print("CMD: " + String(cmdByte, 16) + " - ");
 
             switch (cmdByte)
             {
-            case BCLS_HANDSHAKE:
-                Serial.write(BCLR_CMD_VALIDO);
+            case 0xF0:
+                Serial.write(0xF4 /*Se envia si el comando recibido en STANDBY es VALIDO...*/);
                 Serial3.println("HANDSHAKE");
                 break;
 
-            case BCLS_PREPARAR_IMPRESION:
-                Serial.write(BCLR_CMD_VALIDO);
+            case 0xF1 /*Se debe mandar al final de toda configuracion, justo antes de recibir datos de hoja.*/:
+                Serial.write(0xF4 /*Se envia si el comando recibido en STANDBY es VALIDO...*/);
                 BCLV_IMPRIMIENDO = 1;
-                BCL_ESTADO = BCL_ESTADO_RECIBIENDO_HOJA;
+                BCL_ESTADO = 1 /*En este estado se recibe y guardan los bytes recibidos a la matriz contenidoHoja*/;
                 Serial3.println("PREP");
                 break;
-            case BCLS_HOJA_NUMERO:
-                Serial.write(BCLR_CMD_VALIDO);
+            case 0xF2:
+                Serial.write(0xF4 /*Se envia si el comando recibido en STANDBY es VALIDO...*/);
                 BCLV_HOJA_NUMERO = valByte;
                 Serial3.println("H_TOT: " + String(valByte));
                 break;
-            case BCLS_HOJA_ACTUAL:
-                Serial.write(BCLR_CMD_VALIDO);
+            case 0xF3:
+                Serial.write(0xF4 /*Se envia si el comando recibido en STANDBY es VALIDO...*/);
                 BCLV_HOJA_ACTUAL = valByte;
                 Serial3.println("H_ACT: " + String(valByte));
                 break;
             default: //Comando no valido
-                Serial.write(BCLR_CMD_INVALIDO);
+                Serial.write(0xF5 /*Se envia si el comando recibido en STANDBY es invalido...*/);
                 Serial3.println("INVALIDO");
                 break;
             }
@@ -133,7 +135,7 @@ void BrailleComLib_Loop()
         //ESTADO_RECIBIENDO_HOJA
         //Esto traba el codigo hasta que termine de recibir la hoja, o transcurra un timeout...
         recibirHoja();
-        BCL_ESTADO = BCL_ESTADO_STANDBY;
+        BCL_ESTADO = 0 /*En estado normal, recibe handshakes, envia y recibe boludeces.*/;
     }
 
     //Actualizar la variable que indica si se esta imprimiendo.
@@ -144,7 +146,7 @@ void BrailleComLib_Loop()
 void recibirHoja()
 {
     //poner en 0 para salir del loop
-    digitalWrite(13, HIGH);
+    digitalWrite(13, 0x1);
     uint8_t serialRXBuffer[504]; //zarpadaso bufer logi
     Serial3.println("Entrado en modo recibirHoja");
 
@@ -170,29 +172,24 @@ void recibirHoja()
 
     if (recepcion_ok)
     {
-        Serial.write(BCLE_RECEPCION_OK);
+        Serial.write(0xF8 /*Se envia si se recibio la hoja correctamente.*/);
         uint8_t csum = checksum_get(serialRXBuffer, 504);
         Serial.write(csum);
         Serial3.println("RECEPCION OK CRC: " + String(csum));
     }
     else
     {
-        Serial.write(BCLE_RECEPCION_ERROR); //enviar que hubo un error
+        Serial.write(0xF9 /*Se envia si hubo un error al recibir una hoja.*/); //enviar que hubo un error
         Serial3.println("TIMEOUT, BYTES RECIBIDOS: " + String(bytesRecibidos));
     }
 
     Serial3.println("Salida del modo recibirHoja");
-    digitalWrite(13, LOW);
+    digitalWrite(13, 0x0);
 }
 
 uint8_t checksum_get(const byte *data, size_t dataLength)
 {
-    uint8_t sum;
-    while (dataLength)
-    {
-
-    }
-    //return(CRC8(data, dataLength));
+    return(CRC8(data, dataLength));
 }
 
 

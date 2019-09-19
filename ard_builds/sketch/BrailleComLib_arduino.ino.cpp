@@ -1,5 +1,23 @@
+#include <Arduino.h>
+#line 1 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+#line 1 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
 #include <stdint.h>
 
+#line 3 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+void setup();
+#line 14 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+void loop();
+#line 53 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+void BrailleComLib_Init();
+#line 62 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+void BrailleComLib_Loop();
+#line 144 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+void recibirHoja();
+#line 188 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+uint8_t checksum_get(const byte *data, size_t dataLength);
+#line 195 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+byte CRC8(const byte *data, size_t dataLength);
+#line 3 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
 void setup()
 {
     Serial.begin(115200);
@@ -187,12 +205,7 @@ void recibirHoja()
 
 uint8_t checksum_get(const byte *data, size_t dataLength)
 {
-    uint8_t sum;
-    while (dataLength)
-    {
-
-    }
-    //return(CRC8(data, dataLength));
+    return(CRC8(data, dataLength));
 }
 
 
