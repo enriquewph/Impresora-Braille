@@ -13,10 +13,8 @@ void BrailleComLib_Init();
 void BrailleComLib_Loop();
 #line 144 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
 void recibirHoja();
-#line 188 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
-uint8_t checksum_get(const byte *data, size_t dataLength);
-#line 195 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
-byte CRC8(const byte *data, size_t dataLength);
+#line 192 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
+uint8_t calcularChecksum(uint8_t *datos);
 #line 3 "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\BrailleComLib_arduino\\BrailleComLib_arduino.ino"
 void setup()
 {
@@ -163,35 +161,39 @@ void recibirHoja()
 {
     //poner en 0 para salir del loop
     digitalWrite(13, HIGH);
-    uint8_t serialRXBuffer[504]; //zarpadaso bufer logi
+    uint8_t serialRXBuffer[505]; //zarpadaso bufer logi
     Serial3.println("Entrado en modo recibirHoja");
 
     uint8_t indiceX = 0;
     uint8_t indiceY = 0;
     uint16_t indiceBuffer = 0;
+    byte checksum = 0;
 
     uint32_t lastMillis = millis();
 
     Serial.setTimeout(2500);
 
-    size_t bytesRecibidos = Serial.readBytes(serialRXBuffer, 504);
+    size_t bytesRecibidos = Serial.readBytes(serialRXBuffer, 505);
 
     bool recepcion_ok = false;
 
-    if (bytesRecibidos == (size_t)504)
+    if (bytesRecibidos == 505) //504 bytes de hoja + 1 byte de checksum
     {
         for (indiceX = 0; indiceX < 7; indiceX++)
             for (indiceY = 0; indiceY < 72; indiceY++)
-                contenidoHoja[indiceX][indiceY] = serialRXBuffer[indiceBuffer];
-        recepcion_ok = true;
+                contenidoHoja[indiceX][indiceY] = serialRXBuffer[indiceBuffer++];
+        
+        checksum = calcularChecksum(serialRXBuffer);
+        byte checksum_pc = serialRXBuffer[504];
+
+        if (checksum == checksum_pc)
+            recepcion_ok = true;
     }
 
     if (recepcion_ok)
     {
         Serial.write(BCLE_RECEPCION_OK);
-        uint8_t csum = checksum_get(serialRXBuffer, 504);
-        Serial.write(csum);
-        Serial3.println("RECEPCION OK CRC: " + String(csum));
+        Serial3.println("RECEPCION OK CSUM: " + String(checksum));
     }
     else
     {
@@ -203,29 +205,15 @@ void recibirHoja()
     digitalWrite(13, LOW);
 }
 
-uint8_t checksum_get(const byte *data, size_t dataLength)
+uint8_t calcularChecksum(uint8_t *datos)
 {
-    return(CRC8(data, dataLength));
-}
+    uint8_t checksum = 0;
+    uint32_t checksum_long = 0;
 
+    for (int i = 0; i < 504; i++)
+        checksum_long += datos[i];
 
+    checksum = checksum_long % 256;
 
-byte CRC8(const byte *data, size_t dataLength)
-{
-    byte crc = 0x00;
-    while (dataLength--)
-    {
-        byte extract = *data++;
-        for (byte tempI = 8; tempI; tempI--)
-        {
-            byte sum = (crc ^ extract) & 0x01;
-            crc >>= 1;
-            if (sum)
-            {
-                crc ^= 0x8C;
-            }
-            extract >>= 1;
-        }
-    }
-    return crc;
+    return checksum;
 }

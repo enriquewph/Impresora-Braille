@@ -147,35 +147,39 @@ void recibirHoja()
 {
     //poner en 0 para salir del loop
     digitalWrite(13, 0x1);
-    uint8_t serialRXBuffer[504]; //zarpadaso bufer logi
+    uint8_t serialRXBuffer[505]; //zarpadaso bufer logi
     Serial3.println("Entrado en modo recibirHoja");
 
     uint8_t indiceX = 0;
     uint8_t indiceY = 0;
     uint16_t indiceBuffer = 0;
+    byte checksum = 0;
 
     uint32_t lastMillis = millis();
 
     Serial.setTimeout(2500);
 
-    size_t bytesRecibidos = Serial.readBytes(serialRXBuffer, 504);
+    size_t bytesRecibidos = Serial.readBytes(serialRXBuffer, 505);
 
     bool recepcion_ok = false;
 
-    if (bytesRecibidos == (size_t)504)
+    if (bytesRecibidos == 505) //504 bytes de hoja + 1 byte de checksum
     {
         for (indiceX = 0; indiceX < 7; indiceX++)
             for (indiceY = 0; indiceY < 72; indiceY++)
-                contenidoHoja[indiceX][indiceY] = serialRXBuffer[indiceBuffer];
-        recepcion_ok = true;
+                contenidoHoja[indiceX][indiceY] = serialRXBuffer[indiceBuffer++];
+
+        checksum = calcularChecksum(serialRXBuffer);
+        byte checksum_pc = serialRXBuffer[504];
+
+        if (checksum == checksum_pc)
+            recepcion_ok = true;
     }
 
     if (recepcion_ok)
     {
         Serial.write(0xF8 /*Se envia si se recibio la hoja correctamente.*/);
-        uint8_t csum = checksum_get(serialRXBuffer, 504);
-        Serial.write(csum);
-        Serial3.println("RECEPCION OK CRC: " + String(csum));
+        Serial3.println("RECEPCION OK CSUM: " + String(checksum));
     }
     else
     {
@@ -187,29 +191,15 @@ void recibirHoja()
     digitalWrite(13, 0x0);
 }
 
-uint8_t checksum_get(const byte *data, size_t dataLength)
+uint8_t calcularChecksum(uint8_t *datos)
 {
-    return(CRC8(data, dataLength));
-}
+    uint8_t checksum = 0;
+    uint32_t checksum_long = 0;
 
+    for (int i = 0; i < 504; i++)
+        checksum_long += datos[i];
 
+    checksum = checksum_long % 256;
 
-byte CRC8(const byte *data, size_t dataLength)
-{
-    byte crc = 0x00;
-    while (dataLength--)
-    {
-        byte extract = *data++;
-        for (byte tempI = 8; tempI; tempI--)
-        {
-            byte sum = (crc ^ extract) & 0x01;
-            crc >>= 1;
-            if (sum)
-            {
-                crc ^= 0x8C;
-            }
-            extract >>= 1;
-        }
-    }
-    return crc;
+    return checksum;
 }
