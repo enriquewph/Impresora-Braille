@@ -1,8 +1,8 @@
 {
     "sketch": "BrailleComLib_arduino.ino",
-    "board": "arduino:avr:mega",
-    "configuration": "cpu=atmega2560",
-    "port": "COM19",
+    "board": "esp32:esp32:esp32wrover",
+    "configuration": "PartitionScheme=default,FlashMode=qio,FlashFreq=80,UploadSpeed=921600,DebugLevel=none",
+    "port": "COM22",
     "output": "../ard_builds",
     "programmer": "AVRISP mkII"
 }

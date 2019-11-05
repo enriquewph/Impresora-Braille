@@ -3,12 +3,9 @@
 void setup()
 {
     Serial.begin(115200);
-    Serial3.begin(115200);
     BrailleComLib_Init();
     pinMode(0, OUTPUT);
     digitalWrite(0, HIGH);
-    pinMode(13, OUTPUT);
-    Serial3.println("INICIADO");
 }
 
 void loop()
@@ -96,34 +93,27 @@ void BrailleComLib_Loop()
 
         if (BCL_STANDBY_CMD_RECIBIDO)
         {
-            Serial3.print("CMD: " + String(cmdByte, HEX) + " - ");
-
             switch (cmdByte)
             {
             case BCLS_HANDSHAKE:
                 Serial.write(BCLR_CMD_VALIDO);
-                Serial3.println("HANDSHAKE");
                 break;
 
             case BCLS_PREPARAR_IMPRESION:
                 Serial.write(BCLR_CMD_VALIDO);
                 BCLV_IMPRIMIENDO = 1;
                 BCL_ESTADO = BCL_ESTADO_RECIBIENDO_HOJA;
-                Serial3.println("PREP");
                 break;
             case BCLS_HOJA_NUMERO:
                 Serial.write(BCLR_CMD_VALIDO);
                 BCLV_HOJA_NUMERO = valByte;
-                Serial3.println("H_TOT: " + String(valByte));
                 break;
             case BCLS_HOJA_ACTUAL:
                 Serial.write(BCLR_CMD_VALIDO);
                 BCLV_HOJA_ACTUAL = valByte;
-                Serial3.println("H_ACT: " + String(valByte));
                 break;
             default: //Comando no valido
                 Serial.write(BCLR_CMD_INVALIDO);
-                Serial3.println("INVALIDO");
                 break;
             }
         }
@@ -143,61 +133,41 @@ void BrailleComLib_Loop()
 
 void recibirHoja()
 {
-    //poner en 0 para salir del loop
-    digitalWrite(13, HIGH);
     uint8_t serialRXBuffer[505]; //zarpadaso bufer logi
-    Serial3.println("Entrado en modo recibirHoja");
-
     uint8_t indiceX = 0;
     uint8_t indiceY = 0;
     uint16_t indiceBuffer = 0;
-    byte checksum = 0;
-
-    uint32_t lastMillis = millis();
+    uint32_t checksum_long = 0;
+    uint8_t checksum = 0;
+    uint8_t checksum_pc = 0;
 
     Serial.setTimeout(2500);
 
-    size_t bytesRecibidos = Serial.readBytes(serialRXBuffer, 505);
+    uint16_t bytesRecibidos = Serial.readBytes(serialRXBuffer, 505);
 
     bool recepcion_ok = false;
 
     if (bytesRecibidos == 505) //504 bytes de hoja + 1 byte de checksum
     {
         for (indiceX = 0; indiceX < 7; indiceX++)
+        {
             for (indiceY = 0; indiceY < 72; indiceY++)
+            {
                 contenidoHoja[indiceX][indiceY] = serialRXBuffer[indiceBuffer];
-        
-        checksum = calcularChecksum(serialRXBuffer);
-        byte checksum_pc = serialRXBuffer[505];
+                checksum_long += serialRXBuffer[indiceBuffer];
+                indiceBuffer++;
+            }
+        }
+
+        checksum_pc = serialRXBuffer[504];
+        checksum = checksum_long % 256;
 
         if (checksum == checksum_pc)
             recepcion_ok = true;
     }
 
     if (recepcion_ok)
-    {
         Serial.write(BCLE_RECEPCION_OK);
-        Serial3.println("RECEPCION OK CSUM: " + String(checksum));
-    }
     else
-    {
         Serial.write(BCLE_RECEPCION_ERROR); //enviar que hubo un error
-        Serial3.println("TIMEOUT, BYTES RECIBIDOS: " + String(bytesRecibidos));
-    }
-
-    Serial3.println("Salida del modo recibirHoja");
-    digitalWrite(13, LOW);
-}
-
-uint8_t calcularChecksum(uint8_t *datos)
-{
-    uint8_t checksum = 0;
-    uint32_t checksum_long = 0;
-
-    for (int i = 0; i < 504; i++)
-        checksum_long += datos[i];
-
-    checksum = checksum_long % 256;
-
-    return checksum;
 }
