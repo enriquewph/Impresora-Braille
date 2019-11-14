@@ -149,9 +149,9 @@ void recibirHoja()
     uint8_t indiceX = 0;
     uint8_t indiceY = 0;
     uint16_t indiceBuffer = 0;
-    byte checksum = 0;
-
-    uint32_t lastMillis = millis();
+    uint32_t checksum_long = 0;
+    uint8_t checksum = 0;
+    uint8_t checksum_pc = 0;
 
     Serial.setTimeout(2500);
 
@@ -185,7 +185,6 @@ void recibirHoja()
         }        
     }
     else
-    {
         Serial.write(BCLE_RECEPCION_ERROR); //enviar que hubo un error
 #ifdef DEBUG
         Serial3.println("TIMEOUT, BYTES RECIBIDOS: " + String(bytesRecibidos));
