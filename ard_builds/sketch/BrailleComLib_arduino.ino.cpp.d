@@ -10,4 +10,6 @@ c:\Users\quiqu\Documents\GitHub\Impresora-Braille\ard_builds\sketch\BrailleComLi
  C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\cores\arduino/Printable.h \
  C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\cores\arduino/USBAPI.h \
  C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\cores\arduino/Arduino.h \
- C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\variants\mega/pins_arduino.h
+ C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\variants\mega/pins_arduino.h \
+ c:\Users\quiqu\Documents\GitHub\Impresora-Braille\ard_builds\sketch\header.h \
+ c:\Users\quiqu\Documents\GitHub\Impresora-Braille\ard_builds\sketch\comandos_uart.h

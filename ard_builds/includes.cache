@@ -1,17 +1,17 @@
 [
   {
-    "Sourcefile": "",
+    "Sourcefile": null,
     "Include": "",
     "Includepath": "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino"
   },
   {
-    "Sourcefile": "",
+    "Sourcefile": null,
     "Include": "",
     "Includepath": "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\variants\\mega"
   },
   {
     "Sourcefile": "c:\\Users\\quiqu\\Documents\\GitHub\\Impresora-Braille\\ard_builds\\sketch\\BrailleComLib_arduino.ino.cpp",
     "Include": "",
-    "Includepath": ""
+    "Includepath": null
   }
 ]

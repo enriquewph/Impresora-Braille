@@ -1,14 +1,16 @@
-#include <stdint.h>
+#include "header.h"
 
 void setup()
 {
     Serial.begin(115200);
+#ifdef DEBUG
     Serial3.begin(115200);
-    BrailleComLib_Init();
     pinMode(0, OUTPUT);
     digitalWrite(0, HIGH);
     pinMode(13, OUTPUT);
     Serial3.println("INICIADO");
+#endif
+    BrailleComLib_Init();
 }
 
 void loop()
@@ -16,52 +18,36 @@ void loop()
     BrailleComLib_Loop();
 }
 
-//Configuracion:
-#define BCL_RECIBIR_HOJA_TIMEOUT 2000 //[mS] transcurridos desde que no se recibio ningun dato. \
-                                      //al recibir una hoja, para que se destrabe el sistema.
-
-//Variables del sistema
-uint8_t BCLV_HOJA_ACTUAL = 0; //Se actualiza, desde la pc, con la hoja actual que se esta imprimiendo
-uint8_t BCLV_HOJA_NUMERO = 0; //Se actualiza, desde la pc, con el numero total de hojas a imprimir
-uint8_t BCLV_IMPRIMIENDO = 0; //Se actualiza, desde la pc, si la impresora entra en modo de impresion.
-                              //1 = Se está imprimiendo, 0 = Se termino la impresion/No se está imprimiendo.
-
-byte contenidoHoja[7][72]; // 7 Bytes, 72 renglones -> 56x72 puntos -> 28 x 24 caracteres braille
-
-//Estados de la comunicacion, para diferenciar que se recibe ya que al recibir una hoja
-//se pueden dar todas las combinaciones de bytes posibles.
-#define BCL_ESTADO_STANDBY 0         //En estado normal, recibe handshakes, envia y recibe boludeces.
-#define BCL_ESTADO_RECIBIENDO_HOJA 1 //En este estado se recibe y guardan los bytes recibidos a la matriz contenidoHoja
-uint8_t BCL_ESTADO = BCL_ESTADO_STANDBY;
-
-//Comandos a recibir.
-#define BCLS_HANDSHAKE 0xF0
-#define BCLS_PREPARAR_IMPRESION 0xF1 //Se debe mandar al final de toda configuracion, justo antes de recibir datos de hoja.
-#define BCLS_HOJA_NUMERO 0xF2
-#define BCLS_HOJA_ACTUAL 0xF3
-
-//Respuestas a enviar.
-#define BCLR_CMD_VALIDO 0xF4   //Se envia si el comando recibido en STANDBY es VALIDO...
-#define BCLR_CMD_INVALIDO 0xF5 //Se envia si el comando recibido en STANDBY es invalido...
-
-//Respuestas a enviar dadas por eventos.
-#define BCLE_IMPRESION_OK 0xF6    //Se envia si se termino de imprimir una hoja, y se espera mas datos.
-#define BCLE_IMPRESION_ERROR 0xF7 //Se envia si no se pudo imprimir la hoja...
-#define BCLE_RECEPCION_OK 0xF8    //Se envia si se recibio la hoja correctamente.
-#define BCLE_RECEPCION_ERROR 0xF9 //Se envia si hubo un error al recibir una hoja.
-
-void BrailleComLib_Init()
+#ifdef DEBUG
+void serialEvent3()
 {
+    String inputString = Serial3.readStringUntil('\n');
+    switch (inputString.toInt())
+    {
+    case 1:
+        BCL_SendEvent(BCLE_EVENTO_IMPRESION_OK, 0);
+        break;
+    case 2:
+        BCL_SendEvent(BCLE_EVENTO_IMPRESION_FAIL, 0);
+        break;
+    case 3:
+        BCL_SendEvent(BCLE_EVENTO_SHUTDOWN, 0);
+        break;
+    case 4:
+        BCL_SendEvent(BCLE_EVENTO_LINEA_TERMINADA, BCLV_HOJA_ACTUAL);
+        break;
+    }
 }
+#endif
 
-uint8_t BCL_SER_REC_BUFF[2];
-uint8_t BCL_SER_REC_BUFF_INDEX = 0;
-bool BCL_STANDBY_CMD_RECIBIDO = 0;
-uint32_t BCL_LASTMILLIS_TMOUT;
+void BCL_SendEvent(uint8_t EVENTO, uint8_t DATO) //Para la mayoria de los eventos el dato es opcional, poner 0..
+{
+    uint8_t SerialSendBuffer[3] = {BCLE_EVENTO_PREFIX, EVENTO, DATO};
+    Serial.write(SerialSendBuffer, 3);
+}
 
 void BrailleComLib_Loop()
 {
-
     if (BCL_ESTADO == BCL_ESTADO_STANDBY)
     {
         uint8_t cmdByte, valByte;
@@ -96,34 +82,45 @@ void BrailleComLib_Loop()
 
         if (BCL_STANDBY_CMD_RECIBIDO)
         {
+#ifdef DEBUG
             Serial3.print("CMD: " + String(cmdByte, HEX) + " - ");
-
+#endif
             switch (cmdByte)
             {
             case BCLS_HANDSHAKE:
                 Serial.write(BCLR_CMD_VALIDO);
+#ifdef DEBUG
                 Serial3.println("HANDSHAKE");
+#endif
                 break;
 
             case BCLS_PREPARAR_IMPRESION:
                 Serial.write(BCLR_CMD_VALIDO);
                 BCLV_IMPRIMIENDO = 1;
                 BCL_ESTADO = BCL_ESTADO_RECIBIENDO_HOJA;
+#ifdef DEBUG
                 Serial3.println("PREP");
+#endif
                 break;
             case BCLS_HOJA_NUMERO:
                 Serial.write(BCLR_CMD_VALIDO);
                 BCLV_HOJA_NUMERO = valByte;
+#ifdef DEBUG
                 Serial3.println("H_TOT: " + String(valByte));
+#endif
                 break;
             case BCLS_HOJA_ACTUAL:
                 Serial.write(BCLR_CMD_VALIDO);
                 BCLV_HOJA_ACTUAL = valByte;
+#ifdef DEBUG
                 Serial3.println("H_ACT: " + String(valByte));
+#endif
                 break;
             default: //Comando no valido
                 Serial.write(BCLR_CMD_INVALIDO);
+#ifdef DEBUG
                 Serial3.println("INVALIDO");
+#endif
                 break;
             }
         }
@@ -144,9 +141,10 @@ void BrailleComLib_Loop()
 void recibirHoja()
 {
     //poner en 0 para salir del loop
+#ifdef DEBUG
     digitalWrite(13, HIGH);
-    uint8_t serialRXBuffer[505]; //zarpadaso bufer logi
     Serial3.println("Entrado en modo recibirHoja");
+#endif
 
     uint8_t indiceX = 0;
     uint8_t indiceY = 0;
@@ -157,36 +155,93 @@ void recibirHoja()
 
     Serial.setTimeout(2500);
 
-    size_t bytesRecibidos = Serial.readBytes(serialRXBuffer, 505);
+    size_t bytesRecibidos = Serial.readBytes(serialRXBuffer, BCL_BUFFER_SIZE);
 
     bool recepcion_ok = false;
 
-    if (bytesRecibidos == 505) //504 bytes de hoja + 1 byte de checksum
+    if (bytesRecibidos == BCL_BUFFER_SIZE) //504 bytes de hoja + 1 byte de checksum
     {
-        for (indiceX = 0; indiceX < 7; indiceX++)
-            for (indiceY = 0; indiceY < 72; indiceY++)
-                contenidoHoja[indiceX][indiceY] = serialRXBuffer[indiceBuffer];
-        
         checksum = calcularChecksum(serialRXBuffer);
-        byte checksum_pc = serialRXBuffer[505];
+        byte checksum_pc = serialRXBuffer[BCL_SIZE_BYTES_TOTAL];
 
         if (checksum == checksum_pc)
             recepcion_ok = true;
-    }
 
-    if (recepcion_ok)
-    {
-        Serial.write(BCLE_RECEPCION_OK);
-        Serial3.println("RECEPCION OK CSUM: " + String(checksum));
+        if (recepcion_ok)
+        {
+            Serial.write(BCLE_RECEPCION_OK);
+            //Transponer los datos recibidos al BitArray
+            cargarBitArray();
+#ifdef DEBUG
+            Serial3.println("RECEPCION OK CSUM: " + String(checksum));
+#endif
+        }
+        else
+        {
+            Serial.write(BCLE_RECEPCION_ERROR); //enviar que hubo un error
+#ifdef DEBUG
+            Serial3.println("RECEPCION FAIL CSUM PC: " + String(checksum_pc) + " - ESP: " + String(checksum));
+#endif
+        }        
     }
     else
     {
         Serial.write(BCLE_RECEPCION_ERROR); //enviar que hubo un error
+#ifdef DEBUG
         Serial3.println("TIMEOUT, BYTES RECIBIDOS: " + String(bytesRecibidos));
+#endif
     }
-
+#ifdef DEBUG
     Serial3.println("Salida del modo recibirHoja");
     digitalWrite(13, LOW);
+#endif
+}
+
+void BrailleComLib_Init()
+{
+    cargarBitArray();
+}
+
+void cargarBitArray()
+{
+    uint16_t index_x = 0;
+    uint16_t index_y = 0;
+
+    for (uint16_t index = 0; index < BCL_SIZE_BYTES_TOTAL; index++)
+    {
+        bitArray[index_x++][index_y] = bitRead(serialRXBuffer[index], 0);
+        bitArray[index_x++][index_y] = bitRead(serialRXBuffer[index], 1);
+        bitArray[index_x++][index_y] = bitRead(serialRXBuffer[index], 2);
+        bitArray[index_x++][index_y] = bitRead(serialRXBuffer[index], 3);
+        bitArray[index_x++][index_y] = bitRead(serialRXBuffer[index], 4);
+        bitArray[index_x++][index_y] = bitRead(serialRXBuffer[index], 5);
+        bitArray[index_x++][index_y] = bitRead(serialRXBuffer[index], 6);
+        bitArray[index_x++][index_y] = bitRead(serialRXBuffer[index], 7);
+
+        if (index_x >= BCL_SIZE_BITARRAY_X - 1)
+        {
+            index_x = 0;
+            index_y++;
+        }
+    }
+#ifdef DEBUG
+    /*Serial3.print("bool bitArray[56][72] = {");
+    for (uint16_t y = 0; y < BCL_SIZE_BITARRAY_Y; y++)
+    {
+        if (y > 0)
+            Serial3.print("                         ");
+        for (uint16_t x = 0; x < BCL_SIZE_BITARRAY_X; x++)
+        {
+            Serial3.print(bitArray[x][y]);
+
+            if (y < 71 || x < 55)
+                Serial3.print(", ");
+        }
+        if (y < 71)
+            Serial3.print('\n');
+    }
+    Serial3.print("};");*/
+#endif
 }
 
 uint8_t calcularChecksum(uint8_t *datos)
@@ -194,7 +249,7 @@ uint8_t calcularChecksum(uint8_t *datos)
     uint8_t checksum = 0;
     uint32_t checksum_long = 0;
 
-    for (int i = 0; i < 504; i++)
+    for (int i = 0; i < BCL_SIZE_BYTES_TOTAL; i++)
         checksum_long += datos[i];
 
     checksum = checksum_long % 256;
